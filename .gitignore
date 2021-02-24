@@ -4,6 +4,11 @@
 /data/nginx/log/*
 /data/nginx/html/*
 
+!/data/nginx/html/.gitkeep
+!/data/nginx/log/.gitkeep
+!/data/mongo/db/.gitkeep
+!/data/mongo/log/.gitkeep
+
 node_modules/
 dist/
 
