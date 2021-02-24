@@ -1,0 +1,10 @@
+/data/mongo/db/*
+/data/mongo/log/*
+
+/data/nginx/log/*
+/data/nginx/html/*
+
+node_modules/
+dist/
+
+.DS_Store

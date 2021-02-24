@@ -1,0 +1,58 @@
+version: '3'
+
+networks: ##定义网络组
+  nn: ## 网络组名称
+    driver: bridge ## 网络的模式
+    ipam: ## 配置网络
+      driver: default
+      config:
+        - subnet: 192.168.5.0/24 ## ip地址网络 这里宿主机一般会是该网段的 192.168.5.1,所以不要设置自网段为1
+
+services: 
+  
+  cli:
+    image: nestjs/cli
+    working_dir: /workspace
+    volumes: 
+      - ./backend:/workspace
+    tty: true
+  nest:
+    image: node
+    restart: always
+    working_dir: /usr/myblog/app
+    volumes: 
+      - ./backend/app:/usr/myblog/app
+    expose: 
+      - "3000"
+    networks: ## 定义网络
+      nn: ## 加入的网络的名称
+        ipv4_address: 192.168.5.101 ## ipv4的ip地址
+    command: bash -c "npm config set registry https://registry.npm.taobao.org &&
+              npm install &&
+              npm run build &&
+              node dist/main"
+  mongo:
+    image: mongo
+    volumes:
+      - ./data/mongo/db:/data/db
+      - ./data/mongo/log:/var/log/mongodb
+    restart: always
+    expose:
+      - "27017"
+    networks:
+      nn:
+        ipv4_address: 192.168.5.102
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+  nginx:
+    image: nginx
+    networks:
+      nn:
+        ipv4_address: 192.168.5.103
+    ports: 
+      - 80:80
+    volumes: 
+      - ./data/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./data/nginx/log:/var/log/nginx
+      - ./data/nginx/html:/usr/share/nginx/html
