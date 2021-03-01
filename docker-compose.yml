@@ -18,6 +18,8 @@ services:
     tty: true
   nest:
     image: node
+    depends_on: 
+      - mongo
     restart: always
     working_dir: /usr/myblog/app
     volumes: 
@@ -43,8 +45,11 @@ services:
       nn:
         ipv4_address: 192.168.5.102
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/data/logs    
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    command: mongod --auth # 启动授权登录
   nginx:
     image: nginx
     networks:

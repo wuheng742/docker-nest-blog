@@ -1,65 +1,67 @@
-import { Controller, Get, Res, HttpStatus, Param, NotFoundException, Post, Body, Query, Put, Delete } from '@nestjs/common';
-import { BlogService } from './blog.service';
-import { CreatePostDTO } from './dto/blog.dto';
-import { ValidateObjectId } from './shared/pipes/validate-object-id.pipes';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { from } from 'rxjs';
+import { ArticleService, CategoryService } from './blog.service';
+import { Article } from './schamas/article.schema';
+import { Category } from './schamas/category.schema';
+import { ValidateDBId } from './shared/pipes/validate-db-id.pipe';
+import { Request } from 'express'
 
-@Controller('blog')
-export class BlogController {
+interface CustomResponse {
+    status: Number,
+    data: any,
+    message: String,
+}
 
-    constructor(private blogService: BlogService) { }
+@Controller('article')
+export class ArticleController {
 
-
-    @Get('test')
-    getTest(): string {
-        return "test ";
-    }
-
-    @Get('posts')
-    async getPosts(@Res() res) {
-        const posts = await this.blogService.getPosts();
-        return res.status(HttpStatus.OK).json(posts);
-    }
-
-    @Get('post/:postID')
-    async getPost(@Res() res, @Param('postID', new ValidateObjectId()) postID) {
-        const post = await this.blogService.getPost(postID);
-        if (!post) throw new NotFoundException('Post does not exist!');
-        return res.status(HttpStatus.OK).json(post);
+    constructor(private readonly articleService: ArticleService) {
 
     }
 
-    @Post('/post')
-    async addPost(@Res() res, @Body() createPostDTO: CreatePostDTO) {
-        const newPost = await this.blogService.addPost(createPostDTO);
-        return res.status(HttpStatus.OK).json({
-            message: "Post has been submitted successfully!",
-            post: newPost
-        })
+    @Get()
+    async articles() {
+        const articles = await this.articleService.findAll();
+        return articles;
     }
 
-    @Put('/edit')
-    async editPost(
-        @Res() res,
-        @Query('postID', new ValidateObjectId()) postID,
-        @Body() createPostDTO: CreatePostDTO
-    ) {
-        const editedPost = await this.blogService.editPost(postID, createPostDTO);
-        if (!editedPost) throw new NotFoundException('Post does not exist!');
-        return res.status(HttpStatus.OK).json({
-            message: 'Post has been successfully updated',
-            post: editedPost
-        })
+    @Get(':id')
+    async article(@Param('id', ValidateDBId) id: string) {
+        const articles = await this.articleService.findOne(id);
+        return articles;
     }
 
+    @Post()
+    async createArticle(@Body() article:Article) {
+        const newArticle = await this.articleService.create(article);
+        return newArticle;
+    }
+}
 
-    @Delete('/delete')
-    async deletePost(@Res() res, @Query('postID', new ValidateObjectId()) postID) {
-        const deletedPost = await this.blogService.deletePost(postID);
-        if (!deletedPost) throw new NotFoundException('Post does not exist!');
-        return res.status(HttpStatus.OK).json({
-            message: 'Post has been deleted!',
-            post: deletedPost
-        })
+
+@Controller('category')
+export class CategoryController {
+
+    constructor(private readonly categoryService: CategoryService) {
+
     }
 
+    @Get()
+    async categorys() {
+        const categorys = await this.categoryService.findAll();
+        return categorys;
+    }
+
+    @Get(':id')
+    async category(@Param('id', ValidateDBId) id: string) {
+        const category = await this.categoryService.findOne(id);
+        return category;
+    }
+
+    @Post()
+    async createCategory(@Body() category: Category, @Req() request: Request) {
+        console.log(request.body);
+        const newCategory = await this.categoryService.create(category);
+        return newCategory;
+    }
 }
